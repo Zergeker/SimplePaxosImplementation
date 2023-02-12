@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
-func StartAcceptorController(node *Node, port string) {
+func StartAcceptorController(node *Node, port string, minDelay int, maxDelay int) {
 	acceptorNode := NewAcceptorNode(node)
 
 	http.HandleFunc("/node-info", respondInfo(acceptorNode))
 	http.HandleFunc("/prepare", receivePrepare(acceptorNode))
-	http.HandleFunc("/accept", receiveAcceptAcceptor(acceptorNode))
+	http.HandleFunc("/accept", receiveAcceptAcceptor(acceptorNode, minDelay, maxDelay))
 
 	http.ListenAndServe(":"+port, nil)
 }
@@ -51,7 +53,7 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 	}
 }
 
-func receiveAcceptAcceptor(acceptor *AcceptorNode) http.HandlerFunc {
+func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestBody, _ := ioutil.ReadAll(r.Body)
 
@@ -66,6 +68,7 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode) http.HandlerFunc {
 			reqBodyAccept, _ := json.Marshal(acceptRequest)
 
 			for _, address := range acceptor.Node.Learners {
+				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 				http.Post("http://"+address+"/accept", "application/json", bytes.NewBuffer(reqBodyAccept))
 			}
 

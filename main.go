@@ -21,14 +21,16 @@ func main() {
 	proposers := strings.Split(viper.GetString("PROPOSERS"), ",\n")
 	acceptors := strings.Split(viper.GetString("ACCEPTORS"), ",\n")
 	learners := strings.Split(viper.GetString("LEARNERS"), ",\n")
+	minDelay := viper.GetInt("MIN_DELAY")
+	maxDelay := viper.GetInt("MAX_DELAY")
 
 	n := paxos.NewNode(nodeId, nodeType, proposers, acceptors, learners)
 
 	switch nodeType {
 	case 0:
-		paxos.StartProposerController(n, port)
+		paxos.StartProposerController(n, port, minDelay, maxDelay)
 	case 1:
-		paxos.StartAcceptorController(n, port)
+		paxos.StartAcceptorController(n, port, minDelay, maxDelay)
 	case 2:
 		paxos.StartLearnerController(n, port)
 	default:

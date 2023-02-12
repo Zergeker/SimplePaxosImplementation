@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func StartProposerController(node *Node, port string) {
+func StartProposerController(node *Node, port string, minDelay int, maxDelay int) {
 	proposerNode := NewProposerNode(node)
 	acceptorsLen := len(proposerNode.Node.Acceptors)
 
@@ -29,7 +29,7 @@ func StartProposerController(node *Node, port string) {
 		requestBody, _ := json.Marshal(requestPropose)
 
 		for _, address := range proposerNode.Node.Acceptors {
-
+			time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 			resp, _ := http.Post("http://"+address+"/prepare", "application/json", bytes.NewBuffer(requestBody))
 			respBody, _ := ioutil.ReadAll(resp.Body)
 			var prepareResp ProposeStruct
@@ -49,11 +49,11 @@ func StartProposerController(node *Node, port string) {
 			requestBody, _ = json.Marshal(requestPropose)
 
 			for _, address := range proposerNode.Node.Acceptors {
+				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 				http.Post("http://"+address+"/accept", "application/json", bytes.NewBuffer(requestBody))
 			}
 		}
 
-		time.Sleep(time.Duration((rand.Intn(4)+7)*100) * time.Millisecond)
 		proposerNode.Accepts = nil
 		proposerNode.Node.NodeId += len(proposerNode.Node.Proposers)
 	}
