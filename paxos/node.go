@@ -19,11 +19,24 @@ type AcceptorNode struct {
 	V    int
 }
 
+type AcceptorInfo struct {
+	AcceptorId int
+	N          int
+	V          int
+}
+
 type ProposerNode struct {
 	Node    *Node
 	N       int
 	V       int
 	Accepts []*ProposeStruct
+}
+
+type LearnerNode struct {
+	Node      *Node
+	AcceptedN int
+	AcceptedV int
+	Accepts   []*AcceptorInfo
 }
 
 type ProposeStruct struct {
@@ -52,5 +65,12 @@ func NewProposerNode(node *Node) *ProposerNode {
 	var accepts []*ProposeStruct
 
 	newNode := ProposerNode{node, n, v, accepts}
+	return &newNode
+}
+
+func NewLearnerNode(node *Node) *LearnerNode {
+	var accepts []*AcceptorInfo
+
+	newNode := LearnerNode{node, 0, 0, accepts}
 	return &newNode
 }
