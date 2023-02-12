@@ -38,6 +38,7 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 		var proposeStruct ProposeStruct
 		json.Unmarshal(requestBody, &proposeStruct)
 
+		//Acceptor changes its proposal number and value if receives a proposal with a higher number
 		if proposeStruct.N > acceptor.N {
 			acceptor.N = proposeStruct.N
 			acceptor.V = proposeStruct.V
@@ -47,8 +48,8 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 			fmt.Printf("Proposal № %d has been rejected, current №: %d", proposeStruct.N, acceptor.N)
 		}
 
+		//Acceptor responds with its current proposal number and value
 		responseBodyStruct := ProposeStruct{acceptor.N, acceptor.V}
-
 		respBody, _ := json.Marshal(responseBodyStruct)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -64,6 +65,7 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 		var proposeStruct ProposeStruct
 		json.Unmarshal(requestBody, &proposeStruct)
 
+		//Acceptor changes its proposal number and value if it receives a proposal with a higher or equal number
 		if proposeStruct.N >= acceptor.N {
 			acceptor.N = proposeStruct.N
 			acceptor.V = proposeStruct.V
@@ -71,6 +73,7 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 			acceptRequest := AcceptorInfo{acceptor.Node.NodeId, proposeStruct.N, proposeStruct.V}
 			reqBodyAccept, _ := json.Marshal(acceptRequest)
 
+			//Since it's an accept request, sends current proposal to each learner
 			for _, address := range acceptor.Node.Learners {
 				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 				http.Post("http://"+address+"/accept", "application/json", bytes.NewBuffer(reqBodyAccept))

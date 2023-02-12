@@ -18,16 +18,15 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 
 	go http.ListenAndServe(":"+port, nil)
 
+	//Proposer sends requests in a loop
 	for true == true {
 		fmt.Println("Beginning new iteration")
 		rand.Seed(time.Now().UnixNano())
 
-		proposerNode.N = proposerNode.Node.NodeId
-		proposerNode.V = rand.Intn(100)
-
 		requestPropose := ProposeStruct{proposerNode.N, proposerNode.V}
 		requestBody, _ := json.Marshal(requestPropose)
 
+		//Sends prepare request to each acceptor
 		for _, address := range proposerNode.Node.Acceptors {
 			time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 			fmt.Printf("Sending preparing proposal № %d with value %d to %s\n", proposerNode.N, proposerNode.V, address)
@@ -39,9 +38,11 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 
 			fmt.Printf("Prepare response: N=%d V=%d\n", prepareResp.N, prepareResp.V)
 
+			//Appends a response from acceptor to the list of responses
 			proposerNode.Accepts = append(proposerNode.Accepts, &prepareResp)
 		}
 
+		//If acceptors quorum responded to the proposer, searches for the proposal with the highest number
 		if len(proposerNode.Accepts) > (acceptorsLen/2 + 1) {
 			for _, p := range proposerNode.Accepts {
 				if p.N > proposerNode.N {
@@ -53,14 +54,20 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 			requestPropose = ProposeStruct{proposerNode.N, proposerNode.V}
 			requestBody, _ = json.Marshal(requestPropose)
 
+			//Sends accept request to each acceptor
 			for _, address := range proposerNode.Node.Acceptors {
 				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 				fmt.Printf("Sending acceptance proposal № %d with value %d to %s\n", proposerNode.N, proposerNode.V, address)
 				http.Post("http://"+address+"/accept", "application/json", bytes.NewBuffer(requestBody))
 			}
 		}
+
+		//The list of acceptors responses is cleared
 		proposerNode.Accepts = nil
-		proposerNode.Node.NodeId += len(proposerNode.Node.Proposers)
+
+		//Updating proposal number and new value generation
+		proposerNode.N += len(proposerNode.Node.Proposers)
+		proposerNode.V = rand.Intn(100)
 	}
 }
 

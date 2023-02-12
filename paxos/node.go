@@ -60,6 +60,7 @@ func NewAcceptorNode(node *Node) *AcceptorNode {
 func NewProposerNode(node *Node) *ProposerNode {
 	rand.Seed(time.Now().UnixNano())
 
+	//Generating proposal number and value for the first iteration
 	n := node.NodeId
 	v := rand.Intn(100)
 	var accepts []*ProposeStruct

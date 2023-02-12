@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	//Reading config
 	viper.SetConfigFile("config.env")
 	viper.ReadInConfig()
 
@@ -26,6 +27,7 @@ func main() {
 
 	n := paxos.NewNode(nodeId, nodeType, proposers, acceptors, learners)
 
+	//Choosing a role for the node
 	switch nodeType {
 	case 0:
 		paxos.StartProposerController(n, port, minDelay, maxDelay)

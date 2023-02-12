@@ -10,7 +10,6 @@ import (
 func StartLearnerController(node *Node, port string) {
 	learnerNode := NewLearnerNode(node)
 	initializeAccepts(learnerNode)
-	fmt.Println(learnerNode.Accepts[0])
 
 	http.HandleFunc("/node-info", learnerResponse(learnerNode))
 	http.HandleFunc("/accept", receiveAcceptLearner(learnerNode))
@@ -19,6 +18,7 @@ func StartLearnerController(node *Node, port string) {
 }
 
 func initializeAccepts(node *LearnerNode) {
+	//Getting each acceptors info to form a list of acceptors proposals
 	for _, address := range node.Node.Acceptors {
 		resp, _ := http.Get("http://" + address + "/node-info")
 		respBody, _ := ioutil.ReadAll(resp.Body)
@@ -45,13 +45,16 @@ func receiveAcceptLearner(n *LearnerNode) http.HandlerFunc {
 		var acceptInfo AcceptorInfo
 		json.Unmarshal(reqBody, &acceptInfo)
 
+		//If proposal number by acceptor is greater than the last accepted proposal number, learner assumes it as a new possible acceptance
 		if acceptInfo.N > n.AcceptedN {
 			quorum := 1
 			for _, v := range n.Accepts {
+				//Counting all of the accepts with the same number
 				if v.N == acceptInfo.N {
 					quorum += 1
 				}
 
+				//Changing values in the accepts list for the acceptor that send the proposal
 				if v.AcceptorId == acceptInfo.AcceptorId {
 					v.AcceptorId = acceptInfo.AcceptorId
 					v.N = acceptInfo.N
@@ -59,6 +62,7 @@ func receiveAcceptLearner(n *LearnerNode) http.HandlerFunc {
 				}
 			}
 
+			//If quorum is reached, new value is accepted
 			if quorum >= len(n.Node.Acceptors)/2+1 {
 				n.AcceptedN = acceptInfo.N
 				n.AcceptedV = acceptInfo.V
