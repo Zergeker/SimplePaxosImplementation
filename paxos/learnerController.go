@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 func StartLearnerController(node *Node, port string) {
@@ -13,7 +12,7 @@ func StartLearnerController(node *Node, port string) {
 	initializeAccepts(learnerNode)
 	fmt.Println(learnerNode.Accepts[0])
 
-	http.HandleFunc("/", learnerResponse(learnerNode))
+	http.HandleFunc("/node-info", learnerResponse(learnerNode))
 	http.HandleFunc("/accept", receiveAcceptLearner(learnerNode))
 
 	http.ListenAndServe(":"+port, nil)
@@ -33,8 +32,10 @@ func initializeAccepts(node *LearnerNode) {
 
 func learnerResponse(n *LearnerNode) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		message := "Response from learner with id: " + strconv.Itoa(n.Node.NodeId)
-		fmt.Fprint(w, message)
+		respBody, _ := json.Marshal(n)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		w.Write(respBody)
 	}
 }
 

@@ -41,6 +41,10 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 		if proposeStruct.N > acceptor.N {
 			acceptor.N = proposeStruct.N
 			acceptor.V = proposeStruct.V
+
+			fmt.Printf("New value %d has been prepared for accept with propose № %d\n", acceptor.V, acceptor.N)
+		} else {
+			fmt.Printf("Proposal № %d has been rejected, current №: %d", proposeStruct.N, acceptor.N)
 		}
 
 		responseBodyStruct := ProposeStruct{acceptor.N, acceptor.V}
