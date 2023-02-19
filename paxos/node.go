@@ -11,6 +11,7 @@ type Node struct {
 	Proposers []string
 	Acceptors []string
 	Learners  []string
+	msgLimit  int
 }
 
 type AcceptorNode struct {
@@ -44,8 +45,8 @@ type ProposeStruct struct {
 	V int
 }
 
-func NewNode(nodeId int, nodeType int, proposers []string, acceptors []string, learners []string) *Node {
-	n := Node{nodeId, nodeType, proposers, acceptors, learners}
+func NewNode(nodeId int, nodeType int, proposers []string, acceptors []string, learners []string, crashCount int) *Node {
+	n := Node{nodeId, nodeType, proposers, acceptors, learners, crashCount}
 	return &n
 }
 

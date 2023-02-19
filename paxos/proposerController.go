@@ -31,19 +31,21 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 			time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 			fmt.Printf("Sending preparing proposal № %d with value %d to %s\n", proposerNode.N, proposerNode.V, address)
 			resp, _ := http.Post("http://"+address+"/prepare", "application/json", bytes.NewBuffer(requestBody))
-			respBody, _ := ioutil.ReadAll(resp.Body)
+			if resp.StatusCode == 200 {
+				respBody, _ := ioutil.ReadAll(resp.Body)
 
-			var prepareResp ProposeStruct
-			json.Unmarshal(respBody, &prepareResp)
+				var prepareResp ProposeStruct
+				json.Unmarshal(respBody, &prepareResp)
 
-			fmt.Printf("Prepare response: N=%d V=%d\n", prepareResp.N, prepareResp.V)
+				fmt.Printf("Prepare response: N=%d V=%d\n", prepareResp.N, prepareResp.V)
 
-			//Appends a response from acceptor to the list of responses
-			proposerNode.Accepts = append(proposerNode.Accepts, &prepareResp)
+				//Appends a response from acceptor to the list of responses
+				proposerNode.Accepts = append(proposerNode.Accepts, &prepareResp)
+			}
 		}
 
 		//If acceptors quorum responded to the proposer, searches for the proposal with the highest number
-		if len(proposerNode.Accepts) > (acceptorsLen/2 + 1) {
+		if len(proposerNode.Accepts) >= (acceptorsLen/2 + 1) {
 			for _, p := range proposerNode.Accepts {
 				if p.N > proposerNode.N {
 					fmt.Printf("Changing the proposers value %d to the value %d of a greater-numbered proposal № %d\n", proposerNode.V, p.V, p.N)
