@@ -79,7 +79,7 @@ func receiveAcceptLearner(n *LearnerNode) http.HandlerFunc {
 						http.Get("http://" + address + "/consensus")
 					}
 
-					fmt.Printf("Value %d has been accepted with proposal № %d\n", acceptInfo.V, acceptInfo.N)
+					fmt.Printf("Value %d has been accepted with proposal № %d on iteration № %d\n", acceptInfo.V, acceptInfo.N, acceptInfo.I)
 					w.WriteHeader(200)
 				} else {
 					fmt.Printf("Proposal № %d has been rejected, quorum has not been reached\n", acceptInfo.N)

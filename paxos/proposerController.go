@@ -15,6 +15,8 @@ var consensusReached bool
 func StartProposerController(node *Node, port string, minDelay int, maxDelay int) {
 	consensusReached = false
 
+	iteration := 0
+
 	proposerNode := NewProposerNode(node)
 	acceptorsLen := len(proposerNode.Node.Acceptors)
 
@@ -25,10 +27,11 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 
 	//Proposer sends requests in a loop
 	for consensusReached == false {
+		iteration++
 		fmt.Println("Beginning new iteration")
 		rand.Seed(time.Now().UnixNano())
 
-		requestPropose := ProposeStruct{proposerNode.N, proposerNode.V}
+		requestPropose := ProposeStruct{proposerNode.N, proposerNode.V, iteration}
 		requestBody, _ := json.Marshal(requestPropose)
 
 		//Sends prepare request to each acceptor
@@ -65,7 +68,7 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 				proposerNode.V = val
 			}
 
-			requestPropose = ProposeStruct{proposerNode.N, proposerNode.V}
+			requestPropose = ProposeStruct{proposerNode.N, proposerNode.V, iteration}
 			requestBody, _ = json.Marshal(requestPropose)
 
 			//Sends accept request to each acceptor

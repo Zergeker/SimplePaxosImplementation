@@ -26,6 +26,7 @@ type AcceptorInfo struct {
 	AcceptorId int
 	N          int
 	V          int
+	I          int
 }
 
 type ProposerNode struct {
@@ -45,6 +46,7 @@ type LearnerNode struct {
 type ProposeStruct struct {
 	N int
 	V int
+	I int
 }
 
 func NewNode(nodeId int, nodeType int, proposers []string, acceptors []string, learners []string, crashCount int) *Node {
