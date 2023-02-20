@@ -29,7 +29,7 @@ func StartAcceptorController(node *Node, port string, minDelay int, maxDelay int
 
 func respondInfo(n *AcceptorNode) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		acceptorInfo := AcceptorInfo{n.Node.NodeId, n.AcceptedN, n.AcceptedN}
+		acceptorInfo := AcceptorInfo{n.Node.NodeId, n.AcceptedN, n.AcceptedN, 1}
 		respBody, _ := json.Marshal(acceptorInfo)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -60,7 +60,7 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 				acceptor.PreparedV = proposeStruct.V
 
 				//Acceptor responds with its last accepted proposal number and value
-				responseBodyStruct := ProposeStruct{acceptor.AcceptedN, acceptor.AcceptedV}
+				responseBodyStruct := ProposeStruct{acceptor.AcceptedN, acceptor.AcceptedV, 1}
 				respBody, _ := json.Marshal(responseBodyStruct)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -99,7 +99,7 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 				acceptor.AcceptedN = proposeStruct.N
 				acceptor.AcceptedV = proposeStruct.V
 
-				acceptRequest := AcceptorInfo{acceptor.Node.NodeId, proposeStruct.N, proposeStruct.V}
+				acceptRequest := AcceptorInfo{acceptor.Node.NodeId, proposeStruct.N, proposeStruct.V, proposeStruct.I}
 				reqBodyAccept, _ := json.Marshal(acceptRequest)
 
 				//Since it's an accept request, sends current proposal to each learner
