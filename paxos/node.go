@@ -15,9 +15,11 @@ type Node struct {
 }
 
 type AcceptorNode struct {
-	Node *Node
-	N    int
-	V    int
+	Node      *Node
+	PreparedN int
+	PreparedV int
+	AcceptedN int
+	AcceptedV int
 }
 
 type AcceptorInfo struct {
@@ -51,10 +53,12 @@ func NewNode(nodeId int, nodeType int, proposers []string, acceptors []string, l
 }
 
 func NewAcceptorNode(node *Node) *AcceptorNode {
-	n := 0
-	v := 0
+	preparedN := 0
+	preparedV := 0
+	acceptedN := 0
+	acceptedV := 0
 
-	newNode := AcceptorNode{node, n, v}
+	newNode := AcceptorNode{node, preparedN, preparedV, acceptedN, acceptedV}
 	return &newNode
 }
 

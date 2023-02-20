@@ -10,16 +10,21 @@ import (
 	"time"
 )
 
+var consensusReached bool
+
 func StartProposerController(node *Node, port string, minDelay int, maxDelay int) {
+	consensusReached = false
+
 	proposerNode := NewProposerNode(node)
 	acceptorsLen := len(proposerNode.Node.Acceptors)
 
 	http.HandleFunc("/node-info", proposerResponse(proposerNode))
+	http.HandleFunc("/consensus", receiveConsensusMessage())
 
 	go http.ListenAndServe(":"+port, nil)
 
 	//Proposer sends requests in a loop
-	for true == true {
+	for consensusReached == false {
 		fmt.Println("Beginning new iteration")
 		rand.Seed(time.Now().UnixNano())
 
@@ -46,11 +51,18 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 
 		//If acceptors quorum responded to the proposer, searches for the proposal with the highest number
 		if len(proposerNode.Accepts) >= (acceptorsLen/2 + 1) {
+			i := 0
+			var val int
+
 			for _, p := range proposerNode.Accepts {
-				if p.N > proposerNode.N {
-					fmt.Printf("Changing the proposers value %d to the value %d of a greater-numbered proposal № %d\n", proposerNode.V, p.V, p.N)
-					proposerNode.V = p.V
+				if p.N > i {
+					i = p.N
+					val = p.V
 				}
+			}
+
+			if i != 0 {
+				proposerNode.V = val
 			}
 
 			requestPropose = ProposeStruct{proposerNode.N, proposerNode.V}
@@ -67,9 +79,8 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 		//The list of acceptors responses is cleared
 		proposerNode.Accepts = nil
 
-		//Updating proposal number and new value generation
+		//Updating proposal number
 		proposerNode.N += len(proposerNode.Node.Proposers)
-		proposerNode.V = rand.Intn(100)
 	}
 }
 
@@ -79,5 +90,12 @@ func proposerResponse(n *ProposerNode) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(respBody)
+	}
+}
+
+func receiveConsensusMessage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		consensusReached = true
+		w.WriteHeader(200)
 	}
 }

@@ -29,7 +29,7 @@ func StartAcceptorController(node *Node, port string, minDelay int, maxDelay int
 
 func respondInfo(n *AcceptorNode) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		acceptorInfo := AcceptorInfo{n.Node.NodeId, n.N, n.V}
+		acceptorInfo := AcceptorInfo{n.Node.NodeId, n.AcceptedN, n.AcceptedN}
 		respBody, _ := json.Marshal(acceptorInfo)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -55,22 +55,23 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 			json.Unmarshal(requestBody, &proposeStruct)
 
 			//Acceptor changes its proposal number and value if receives a proposal with a higher number
-			if proposeStruct.N > acceptor.N {
-				acceptor.N = proposeStruct.N
-				acceptor.V = proposeStruct.V
+			if proposeStruct.N > acceptor.PreparedN {
+				acceptor.PreparedN = proposeStruct.N
+				acceptor.PreparedV = proposeStruct.V
 
-				fmt.Printf("New value %d has been prepared for accept with propose № %d\n", acceptor.V, acceptor.N)
+				//Acceptor responds with its last accepted proposal number and value
+				responseBodyStruct := ProposeStruct{acceptor.AcceptedN, acceptor.AcceptedV}
+				respBody, _ := json.Marshal(responseBodyStruct)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(respBody)
+
+				fmt.Printf("New value %d has been prepared for accept with propose № %d\n", acceptor.PreparedV, acceptor.PreparedN)
 			} else {
-				fmt.Printf("Proposal № %d has been rejected, current №: %d", proposeStruct.N, acceptor.N)
+				w.WriteHeader(500)
+				fmt.Printf("Proposal № %d has been rejected, current №: %d", proposeStruct.N, acceptor.PreparedN)
 			}
-
-			//Acceptor responds with its current proposal number and value
-			responseBodyStruct := ProposeStruct{acceptor.N, acceptor.V}
-			respBody, _ := json.Marshal(responseBodyStruct)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(200)
-			w.Write(respBody)
 		} else {
 			w.WriteHeader(500)
 		}
@@ -93,10 +94,10 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 			var proposeStruct ProposeStruct
 			json.Unmarshal(requestBody, &proposeStruct)
 
-			//Acceptor changes its proposal number and value if it receives a proposal with a higher or equal number
-			if proposeStruct.N >= acceptor.N {
-				acceptor.N = proposeStruct.N
-				acceptor.V = proposeStruct.V
+			//Acceptor changes its last accepted proposal number and value if it receives a proposal with a higher or equal number
+			if proposeStruct.N >= acceptor.AcceptedN {
+				acceptor.AcceptedN = proposeStruct.N
+				acceptor.AcceptedV = proposeStruct.V
 
 				acceptRequest := AcceptorInfo{acceptor.Node.NodeId, proposeStruct.N, proposeStruct.V}
 				reqBodyAccept, _ := json.Marshal(acceptRequest)
@@ -107,9 +108,9 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 					http.Post("http://"+address+"/accept", "application/json", bytes.NewBuffer(reqBodyAccept))
 				}
 
-				fmt.Printf("New value %d has been accepted with propose № %d\n", acceptor.V, acceptor.N)
+				fmt.Printf("New value %d has been accepted with propose № %d\n", acceptor.AcceptedV, acceptor.AcceptedN)
 			} else {
-				fmt.Printf("Propose № %d has been rejected, current №: %d\n", proposeStruct.N, acceptor.N)
+				fmt.Printf("Propose № %d has been rejected, current №: %d\n", proposeStruct.N, acceptor.AcceptedN)
 			}
 
 			w.WriteHeader(200)
