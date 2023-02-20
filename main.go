@@ -11,6 +11,11 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 5 {
+		fmt.Println("Wrong number of arguments, 4 arguments needed (port, node type, node id, messages limit)")
+		os.Exit(0)
+	}
+
 	//Reading config
 	viper.SetConfigFile("./config.env")
 	viper.ReadInConfig()
