@@ -12,8 +12,13 @@ import (
 
 var msgCount int
 var crashed bool
+var minDelay int
+var maxDelay int
 
-func StartAcceptorController(node *Node, port string, minDelay int, maxDelay int) {
+func StartAcceptorController(node *Node, port string, minDel int, maxDel int) {
+	minDelay = minDel
+	maxDelay = maxDel
+
 	msgCount = 0
 	crashed = false
 
@@ -63,14 +68,17 @@ func receivePrepare(acceptor *AcceptorNode) http.HandlerFunc {
 				responseBodyStruct := ProposeStruct{acceptor.AcceptedN, acceptor.AcceptedV, 1}
 				respBody, _ := json.Marshal(responseBodyStruct)
 
+				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
+
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(200)
 				w.Write(respBody)
 
 				fmt.Printf("New value %d has been prepared for accept with propose № %d\n", acceptor.PreparedV, acceptor.PreparedN)
 			} else {
+				time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 				w.WriteHeader(500)
-				fmt.Printf("Proposal № %d has been rejected, current №: %d", proposeStruct.N, acceptor.PreparedN)
+				fmt.Printf("Proposal № %d has been rejected, current №: %d\n", proposeStruct.N, acceptor.PreparedN)
 			}
 		} else {
 			w.WriteHeader(500)
@@ -112,7 +120,7 @@ func receiveAcceptAcceptor(acceptor *AcceptorNode, minDelay int, maxDelay int) h
 			} else {
 				fmt.Printf("Propose № %d has been rejected, current №: %d\n", proposeStruct.N, acceptor.AcceptedN)
 			}
-
+			time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 			w.WriteHeader(200)
 		} else {
 			w.WriteHeader(500)

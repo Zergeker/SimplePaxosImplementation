@@ -38,8 +38,8 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 		for _, address := range proposerNode.Node.Acceptors {
 			time.Sleep(time.Duration((rand.Intn(maxDelay-minDelay+1)+minDelay)*100) * time.Millisecond)
 			fmt.Printf("Sending preparing proposal № %d with value %d to %s\n", proposerNode.N, proposerNode.V, address)
-			resp, _ := http.Post("http://"+address+"/prepare", "application/json", bytes.NewBuffer(requestBody))
-			if resp.StatusCode == 200 {
+			resp, err := http.Post("http://"+address+"/prepare", "application/json", bytes.NewBuffer(requestBody))
+			if resp.StatusCode == 200 && err == nil {
 				respBody, _ := ioutil.ReadAll(resp.Body)
 
 				var prepareResp ProposeStruct
