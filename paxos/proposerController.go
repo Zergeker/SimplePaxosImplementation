@@ -45,8 +45,6 @@ func StartProposerController(node *Node, port string, minDelay int, maxDelay int
 				var prepareResp ProposeStruct
 				json.Unmarshal(respBody, &prepareResp)
 
-				fmt.Printf("Prepare response: N=%d V=%d\n", prepareResp.N, prepareResp.V)
-
 				//Appends a response from acceptor to the list of responses
 				proposerNode.Accepts = append(proposerNode.Accepts, &prepareResp)
 			}
